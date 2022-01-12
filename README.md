@@ -29,7 +29,7 @@ I may add a schematic and/or additional resources on the final build here or sen
 
 	Run following command to download all the files in this repository.
 
-	`git clone https://github.com/Freenove/Freenove_4WD_Smart_Car_Kit_for_Raspberry_Pi.git`
+	`git clone https://github.com/amdroid007/freenove`
 
 * **Manually download in browser**
 
