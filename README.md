@@ -4,6 +4,25 @@
 
 <img src='Picture/icon.png' width='30%'/>
 
+Please note that this is a fork of the original Freenove 4WD smart car project, and includes some additional capabilities like using state models for performing various auto-drive functionality, addition of headlight, taillights, two different robot arms (one in the back with 2 degrees of freedom, and one in the front with 4 degrees of freedom, using up all 8 servo channels on board). In addition, the UI-based server is replaced with a non-UI server side, and the robot can be controlled using any USB keyboard (you can use a mini-keyboard with a USB dongle). Keycodes from the keyboard may vary from one keyboard to another, so additional improvements may need to be made to this fork before it is fully portable. Use at your own risk.
+
+I am using the following additional GPIO pins and servo channels. See <a href='Code/Server/server_noui.py'>Server code</a> and <a href='Code/Server/Robotarm.py'>Robotarm code</a> for additional details.
+
+* Pin 16: Headlights
+* Pin 20: Right turn signal
+* Pin 21: Tail light (green)
+* Pin 26: Left turn signal
+
+The following servo channels are added:
+* Channel '02': Tail arm (up/down)
+* Channel '03': Tail claw (open/close)
+* Channel '04': Main robotarm pan (left/right)
+* Channel '05': Main robotarm top (up/down)
+* Channel '06': Main robotarm reach (forward/backward)
+* Channel '07': Main robotarm claw (open/close)
+
+I may add a schematic and/or additional resources on the final build here or send on request.
+
 ### Download
 
 * **Use command in console**
