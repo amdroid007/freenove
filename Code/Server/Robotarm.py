@@ -1,4 +1,5 @@
 import time
+import sys
 from threading import Thread
 from Thread import *
 from servo import Servo
@@ -62,7 +63,7 @@ class Robotarm:
         self.start_servo_thread(TURNSERVO, to, by * -1, delay)
     
     def front(self, to=0, by=2, delay=0.05):
-        self.start_servo_thread(REACHSERVO, to=0, by, delay)
+        self.start_servo_thread(REACHSERVO, to, by, delay)
     
     def back(self, to=0, by=2, delay=0.05):
         self.start_servo_thread(REACHSERVO, to, by * -1, delay)
@@ -71,7 +72,7 @@ class Robotarm:
         self.start_servo_thread(CLAWSERVO, to, by, delay)        
     
     def close(self, to=0, by=5, delay=0.05):
-        self.start_servo_thread(CLAWSERVO, to=0, by * -1, delay)
+        self.start_servo_thread(CLAWSERVO, to, by * -1, delay)
         
     def tailopen(self, to=0, by=5, delay=0.05):
         self.start_servo_thread(TAILCLAWSERVO, to, by, delay)        
@@ -120,19 +121,21 @@ class Robotarm:
         
 # Main program logic follows:
 # For full robot this will open and close the claw 4 times
-# Main program logic follows:
-# For full robot this will open and close the claw 4 times
 if __name__ == '__main__':
     servo = Servo()
     myarm=Robotarm(servo)
     
-    myarm.tailup()
+    myarm.taildown(to=30)
     time.sleep(2)
     myarm.stop()
-    myarm.tailup()
+    myarm.tailup(to=110)
     time.sleep(2)
     myarm.stop()
     
     myarm.tailopen()
     time.sleep(1)
     myarm.tailclose()
+    time.sleep(1)
+    myarm.stop()
+    print("Done!")
+    sys.exit(0)
