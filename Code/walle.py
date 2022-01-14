@@ -11,6 +11,7 @@ from robot import *
 def main(args):
 	myrobot = Robot()
 	myrobot.moveArm(turn=65)
+	myrobot.moveBackward()
 	myrobot.horn()
 	return 0
 

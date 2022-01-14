@@ -12,14 +12,22 @@ from gpiozero import LED
 from TailLight import TailLight
 from SevenSegDisplay import SevenSegDisplay
 
+# Digital pin values
+BUZZERPIN = 17 # Used by Buzzer.py code
+LED_PIN = 18  # Used by Led.py code
+HEADLIGHTPIN = 16
+RIGHTREDPIN = 20
+LEFTGREENPIN = 21
+RIGHTGREENPIN = 21
+LEFTREDPIN = 26
+
 class Robot:
 	def __init__(self):
 		self.servo = Servo()
-		self.backlight = TailLight()
-		self.robotarm = Robotarm(servo)
+		self.robotarm = Robotarm(self.servo)
 		self.buzzer = Buzzer()
 		self.frontlight = LED(HEADLIGHTPIN)		
-		self.backlight = TailLight()
+		self.backlight = TailLight(LEFTREDPIN, LEFTGREENPIN, RIGHTREDPIN, RIGHTGREENPIN)
 		self.backlight.bothred()
 		self.motor = Motor()
 		self.dp = SevenSegDisplay()
