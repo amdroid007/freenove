@@ -77,11 +77,13 @@ HANDSTART = 25
 HANDEND = 120
 
 # Digital pin values
+BUZZERPIN = 17 # Used by Buzzer.py code
+LED_PIN = 18  # Used by Led.py code
 HEADLIGHTPIN = 16
+RIGHTREDPIN = 20
 LEFTGREENPIN = 21
 RIGHTGREENPIN = 21
 LEFTREDPIN = 26
-RIGHTREDPIN = 20
 
 # # Dance moves
 DLEFT = 101

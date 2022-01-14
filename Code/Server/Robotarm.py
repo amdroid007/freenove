@@ -3,6 +3,10 @@ from threading import Thread
 from Thread import *
 from servo import Servo
 
+TAILARMMIN = 35
+TAILARMMAX = 150
+TAILCLAWMIN = 25
+TAILCLAWMAX = 120
 CLAWMIN = 55
 CLAWMAX = 90
 TURNMIN = 30
@@ -12,20 +16,24 @@ REACHMAX = 150
 ARMMIN = 40
 ARMMAX = 130
 
+TAILARMSERVO = '2'
+TAILCLAWSERVO = '3'
 TURNSERVO = '4'
 ARMSERVO = '5'
 REACHSERVO = '6'
 CLAWSERVO = '7'
 
+DEFTAILARMPOS = TAILARMMAX
+DEFTAILCLAWPOS = TAILCLAWMIN
 DEFCLAWPOS = 90 
 DEFREACHPOS = 90
 DEFARMPOS = 85
 DEFTURNPOS = 100
 
-defaultangles = {TURNSERVO:DEFTURNPOS, ARMSERVO:DEFARMPOS, REACHSERVO:DEFREACHPOS, CLAWSERVO:DEFCLAWPOS}
-currentangles = {TURNSERVO:DEFTURNPOS, ARMSERVO:DEFARMPOS, REACHSERVO:DEFREACHPOS, CLAWSERVO:DEFCLAWPOS}
-minangles = {TURNSERVO:TURNMIN, ARMSERVO:ARMMIN, REACHSERVO:REACHMIN, CLAWSERVO:CLAWMIN}
-maxangles = {TURNSERVO:TURNMAX, ARMSERVO:ARMMAX, REACHSERVO:REACHMAX, CLAWSERVO:CLAWMAX}
+defaultangles = {TAILARMSERVO:DEFTAILARMPOS, TAILCLAWSERVO:DEFTAILCLAWPOS, TURNSERVO:DEFTURNPOS, ARMSERVO:DEFARMPOS, REACHSERVO:DEFREACHPOS, CLAWSERVO:DEFCLAWPOS}
+currentangles = {TAILARMSERVO:DEFTAILARMPOS, TAILCLAWSERVO:DEFTAILCLAWPOS, TURNSERVO:DEFTURNPOS, ARMSERVO:DEFARMPOS, REACHSERVO:DEFREACHPOS, CLAWSERVO:DEFCLAWPOS}
+minangles = {TAILARMSERVO:TAILARMMIN, TAILCLAWSERVO:TAILCLAWMIN, TURNSERVO:TURNMIN, ARMSERVO:ARMMIN, REACHSERVO:REACHMIN, CLAWSERVO:CLAWMIN}
+maxangles = {TAILARMSERVO:TAILARMMAX, TAILCLAWSERVO:TAILCLAWMAX, TURNSERVO:TURNMAX, ARMSERVO:ARMMAX, REACHSERVO:REACHMAX, CLAWSERVO:CLAWMAX}
 
 class Robotarm:
     def __init__(self, servo):
@@ -33,48 +41,52 @@ class Robotarm:
         for x in currentangles.keys():
             self.servo.setServoPwm(x, currentangles.get(x))
         self.moving = False
-	self.servo_thread = None
+        self.servo_thread = None
         
-    def up(self, by=2, delay=0.05):
-        self.start_servo_thread(ARMSERVO, by, delay)
-        pass
+    def up(self, to=0, by=2, delay=0.05):
+        self.start_servo_thread(ARMSERVO, to, by, delay)
     
-    def down(self, by=2, delay=0.05):
-        self.start_servo_thread(ARMSERVO, by * -1, delay)
-        pass
+    def down(self, to=0, by=2, delay=0.05):
+        self.start_servo_thread(ARMSERVO, to, by * -1, delay)
     
-    def left(self, by=3, delay=0.05):
-        self.start_servo_thread(TURNSERVO, by, delay)
-        pass
+    def tailup(self, to=0, by=2, delay=0.05):
+        self.start_servo_thread(TAILARMSERVO, to, by, delay)
     
-    def right(self, by=3, delay=0.05):
-        self.start_servo_thread(TURNSERVO, by * -1, delay)
-        pass
+    def taildown(self, to=0, by=2, delay=0.05):
+        self.start_servo_thread(TAILARMSERVO, to, by * -1, delay)
     
-    def front(self, by=2, delay=0.05):
-        self.start_servo_thread(REACHSERVO, by, delay)
-        pass
+    def left(self, to=0, by=3, delay=0.05):
+        self.start_servo_thread(TURNSERVO, to, by, delay)
     
-    def back(self, by=2, delay=0.05):
-        self.start_servo_thread(REACHSERVO, by * -1, delay)
-        pass
+    def right(self, to=0, by=3, delay=0.05):
+        self.start_servo_thread(TURNSERVO, to, by * -1, delay)
     
-    def open(self, by=5, delay=0.05):
-        self.start_servo_thread(CLAWSERVO, by, delay)        
-        pass
+    def front(self, to=0, by=2, delay=0.05):
+        self.start_servo_thread(REACHSERVO, to=0, by, delay)
     
-    def close(self, by=5, delay=0.05):
-        self.start_servo_thread(CLAWSERVO, by * -1, delay)
-        pass
+    def back(self, to=0, by=2, delay=0.05):
+        self.start_servo_thread(REACHSERVO, to, by * -1, delay)
+    
+    def open(self, to=0, by=5, delay=0.05):
+        self.start_servo_thread(CLAWSERVO, to, by, delay)        
+    
+    def close(self, to=0, by=5, delay=0.05):
+        self.start_servo_thread(CLAWSERVO, to=0, by * -1, delay)
+        
+    def tailopen(self, to=0, by=5, delay=0.05):
+        self.start_servo_thread(TAILCLAWSERVO, to, by, delay)        
+    
+    def tailclose(self, to=0, by=5, delay=0.05):
+        self.start_servo_thread(TAILCLAWSERVO, to, by * -1, delay)
         
     def stop(self):
         self.stop_servo_thread()
         
-    def start_servo_thread(self, channel, inc, delay):
+    def start_servo_thread(self, channel, to, inc, delay):
         if self.servo_thread or self.moving:
             self.stop_servo_thread()
         self.moving = True    
-        self.servo_thread = Thread(target=self.run_servo_thread, args=(channel, inc, delay))
+        self.servo_thread = Thread(target=self.run_servo_thread, args=(channel, to, inc, delay))
         self.servo_thread.start()   
 
     def stop_servo_thread(self):
@@ -83,11 +95,17 @@ class Robotarm:
             stop_thread(self.servo_thread)
             self.servo_thread = None   
         
-    def run_servo_thread(self, channel, inc, delay):
+    def run_servo_thread(self, channel, to, inc, delay):
         curpos = currentangles.get(channel)
-        minpos = minangles.get(channel)
-        maxpos = maxangles.get(channel) 
+        if to == 0:
+            minpos = minangles.get(channel)
+            maxpos = maxangles.get(channel) 
+        else:
+            minpos = to if inc < 0 else minangles.get(channel)
+            maxpos = to if inc > 0 else maxangles.get(channel)
+            
         while(self.moving and curpos >= minpos and curpos <= maxpos):
+
 		print("Channel:" + channel + " curpos " + str(curpos)) 
                 curpos = curpos + inc
                 curpos = curpos if curpos <= maxpos else maxpos
@@ -107,10 +125,14 @@ class Robotarm:
 if __name__ == '__main__':
     servo = Servo()
     myarm=Robotarm(servo)
-    myarm.up()
-    time.sleep(4)
+    
+    myarm.tailup()
+    time.sleep(2)
+    myarm.stop()
+    myarm.tailup()
+    time.sleep(2)
     myarm.stop()
     
-    myarm.open()
+    myarm.tailopen()
     time.sleep(1)
-    myarm.close()
+    myarm.tailclose()
