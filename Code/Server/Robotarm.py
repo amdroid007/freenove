@@ -9,7 +9,7 @@ TAILARMMAX = 150
 TAILCLAWMIN = 25
 TAILCLAWMAX = 120
 CLAWMIN = 55
-CLAWMAX = 90
+CLAWMAX = 100
 TURNMIN = 30
 TURNMAX = 170
 REACHMIN = 30
@@ -94,29 +94,53 @@ class Robotarm:
         self.moving = False
         if self.servo_thread:
             stop_thread(self.servo_thread)
-            self.servo_thread = None   
+            self.servo_thread = None
+
+    def go(self, turn=0, arm=0, reach=0, claw=0, tail=0, tailclaw=0):
+        if turn > 0:
+            self.moving = True
+            self.run_servo_thread(TURNSERVO, turn, 2, .05)
+        if arm > 0:
+            self.moving = True
+            self.run_servo_thread(ARMSERVO, arm, 2, .05)
+        if reach > 0:
+            self.moving = True
+            self.run_servo_thread(REACHSERVO, reach, 2, .05)
+        if claw > 0:
+            self.moving = True
+            self.run_servo_thread(CLAWSERVO, claw, 5, .05)
+        if tail > 0:
+            self.moving = True
+            self.run_servo_thread(TAILARMSERVO, tail, 2, .05)
+        if tailclaw > 0:
+            self.moving = True
+            self.run_servo_thread(TAILCLAWSERVO, tailclaw, 5, .05)
         
     def run_servo_thread(self, channel, to, inc, delay):
         curpos = currentangles.get(channel)
-        if to == 0:
-            minpos = minangles.get(channel)
-            maxpos = maxangles.get(channel) 
-        else:
-            minpos = to if inc < 0 else minangles.get(channel)
-            maxpos = to if inc > 0 else maxangles.get(channel)
+        inc = inc * -1 if to > 0 and (to - curpos) * inc < 0 else inc
+        minpos = minangles.get(channel)
+        maxpos = maxangles.get(channel) 
+        if to > 0:
+            to = to if to > minpos else minpos
+            to = to if to < maxpos else maxpos
+            minpos = to if inc < 0 else minpos
+            maxpos = to if inc > 0 else maxpos
             
         while(self.moving and curpos >= minpos and curpos <= maxpos):
 
-		print("Channel:" + channel + " curpos " + str(curpos)) 
-                curpos = curpos + inc
-                curpos = curpos if curpos <= maxpos else maxpos
-                curpos = curpos if curpos >= minpos else minpos
+            curpos = curpos + inc
+            curpos = curpos if curpos <= maxpos else maxpos
+            curpos = curpos if curpos >= minpos else minpos
+            print("Channel:" + channel + " curpos " + str(curpos)) 
                 
-                self.servo.setServoPwm(channel, curpos)
-                currentangles[channel] = curpos               
-                time.sleep(delay)
-	self.servo_thread = None
-	self.moving = False
+            self.servo.setServoPwm(channel, curpos)
+            currentangles[channel] = curpos               
+            time.sleep(delay)
+            if curpos == minpos or curpos == maxpos:
+                break
+        self.servo_thread = None
+        self.moving = False
                 
         
 # Main program logic follows:
@@ -131,11 +155,15 @@ if __name__ == '__main__':
     myarm.tailup(to=110)
     time.sleep(2)
     myarm.stop()
+    myarm.tailup(to=100)
+    time.sleep(2)
+    myarm.stop()
     
     myarm.tailopen()
     time.sleep(1)
     myarm.tailclose()
     time.sleep(1)
     myarm.stop()
+    myarm.go(turn=70, arm=80, reach=60, claw=45, tail=100, tailclaw=30)
     print("Done!")
     sys.exit(0)
