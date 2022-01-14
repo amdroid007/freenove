@@ -10,8 +10,9 @@ from robot import *
 
 def main(args):
 	myrobot = Robot()
-	myrobot.go(turn=90, arm=90, reach=90)
-    # return 0
+	myrobot.moveArm(turn=65)
+	myrobot.horn()
+	return 0
 
 if __name__ == '__main__':
     import sys
