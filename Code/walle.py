@@ -10,8 +10,10 @@ from robot import *
 
 def main(args):
 	myrobot = Robot()
-	myrobot.moveArm(turn=65)
-	myrobot.moveBackward()
+	myrobot.display("Hello")
+	myrobot.moveArm(turn=45, arm=70, reach=65)
+	myrobot.moveArm(turn=90, arm=100, reach=120)
+	# myrobot.moveBackward()
 	myrobot.horn()
 	return 0
 
