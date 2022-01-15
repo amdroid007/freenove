@@ -59,13 +59,13 @@ class Robot:
 			time.sleep(duration)
 			self.stop()
 	
-	def turnLeft(self, speed=1500):
+	def turnLeft(self, speed=1500, duration=1.0):
 		self.motor.setMotorModel(-speed, -speed, speed, speed)
 		if duration > 0:
 			time.sleep(duration)
 			self.stop()
 	
-	def turnRight(self, speed=1500):
+	def turnRight(self, speed=1500, duration=1.0):
 		self.motor.setMotorModel(speed, speed, -speed, -speed)
 		if duration > 0:
 			time.sleep(duration)
