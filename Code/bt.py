@@ -1,8 +1,12 @@
+import sys,os
+sys.path.append(os.path.join(sys.path[0],'Server'))
 from evdev import InputDevice, categorize, ecodes
-
-print("ACGAM R1 - pad mapping")
+from Motor import *
 
 #creates object 'gamepad' to store the data
+# The device may be different in different boards
+# particularly if other input devices are connected
+
 gamepad = InputDevice('/dev/input/event2')
 
 #button code variables (change to suit your device)
@@ -35,6 +39,9 @@ rightud = 5 # 1 up 127 mid 255 down
 brake = 10 # 255 max 0 min
 gas = 9 # 255 max 0 min
 
+# Get the motor object
+motor = Motor()
+
 #loop and filter by event code and print the mapped label
 for event in gamepad.read_loop():
     print(event)
@@ -61,5 +68,23 @@ for event in gamepad.read_loop():
     elif event.type == ecodes.EV_ABS:
         if event.code == updown:
             print "up" if event.value == -1 else "release" if event.value == 0 else "down"
-        if event.code == leftright:
+        elif event.code == leftright:
             print "left" if event.value == -1 else "release" if event.value == 0 else "right"
+        elif event.code == leftlr or event.code == rightlr:
+            rawvalue = event.value
+            if (rawvalue > 122 and rawvalue < 132):
+                motor.setMotorModel(0,0,0,0)
+                print("Turn completed")
+            else:
+                speed = (rawvalue - 127) / 127 * 3000
+                print("Left right speed is" + str(speed))
+                motor.setMotorModel(speed, speed, -speed, -speed)
+        elif event.code == leftud or event.code == rightud:
+            rawvalue = event.value    
+            print("Stopping")
+            if (rawvalue > 122 and rawvalue < 132):
+                motor.setMotorModel(0,0,0,0)
+            else:
+                speed = (rawvalue - 127) / 127 * 3000
+                print("Left right speed is" + str(speed))
+                motor.setMotorModel(speed, speed, speed, speed)
