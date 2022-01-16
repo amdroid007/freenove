@@ -7,7 +7,7 @@ from Motor import *
 # The device may be different in different boards
 # particularly if other input devices are connected
 
-gamepad = InputDevice('/dev/input/event2')
+gamepad = InputDevice('/dev/input/event6')
 
 #button code variables (change to suit your device)
 aBtn = 304
@@ -44,7 +44,7 @@ motor = Motor()
 
 #loop and filter by event code and print the mapped label
 for event in gamepad.read_loop():
-    print(event)
+    # print(event)
     if event.type == ecodes.EV_KEY:
         if event.value == 1:
             if event.code == aBtn:
@@ -76,7 +76,7 @@ for event in gamepad.read_loop():
                 motor.setMotorModel(0,0,0,0)
                 print("Turn completed")
             else:
-                speed = (rawvalue - 127) / 127 * 3000
+                speed = int(float(rawvalue - 127) / 127 * 3000)
                 print("Left right speed is" + str(speed))
                 motor.setMotorModel(speed, speed, -speed, -speed)
         elif event.code == leftud or event.code == rightud:
@@ -85,6 +85,6 @@ for event in gamepad.read_loop():
             if (rawvalue > 122 and rawvalue < 132):
                 motor.setMotorModel(0,0,0,0)
             else:
-                speed = (rawvalue - 127) / 127 * 3000
-                print("Left right speed is" + str(speed))
-                motor.setMotorModel(speed, speed, speed, speed)
+                speed = int(float(rawvalue - 127) / 127 * 3000)
+                print("forward backward speed is" + str(speed))
+                motor.setMotorModel(-speed, -speed, -speed, -speed)
