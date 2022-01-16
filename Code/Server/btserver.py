@@ -85,8 +85,6 @@ for event in gamepad.read_loop():
                 robotarm.open()
             if event.value == 1:
                 robotarm.close()
-            else:
-                robotarm.stop()
         elif event.code == leftlr:
             if (rawvalue > 122 and rawvalue < 132):
                 motor.setMotorModel(0,0,0,0)
