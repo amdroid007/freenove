@@ -86,6 +86,7 @@ class Robotarm:
     def start_servo_thread(self, channel, to, inc, delay):
         if self.servo_thread or self.moving:
             self.stop_servo_thread()
+            time.sleep(0.2) # Pause a bit if we were already running to let things sync?
         self.moving = True    
         self.servo_thread = Thread(target=self.run_servo_thread, args=(channel, to, inc, delay))
         self.servo_thread.start()   

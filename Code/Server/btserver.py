@@ -1,9 +1,19 @@
 import sys,os
+from Carbon.Aliases import false
 sys.path.append(os.path.join(sys.path[0],'Server'))
 from evdev import InputDevice, categorize, ecodes
 from Motor import *
 from Robotarm import *
+import RPi.GPIO as GPIO
 from servo import Servo
+from Buzzer import Buzzer
+from threading import Thread
+from Thread import *
+from ADC import *
+from gpiozero import LED
+from TailLight import TailLight
+from SevenSegDisplay import SevenSegDisplay
+
 
 #creates object 'gamepad' to store the data
 # The device may be different in different boards
@@ -45,6 +55,13 @@ gas = 9 # 255 max 0 min
 motor = Motor()
 servo = Servo()
 robotarm = Robotarm(servo)
+horn = Buzzer()
+headlight = LED(HEADLIGHTPIN)        
+taillight = TailLight(LEFTREDPIN, LEFTGREENPIN, RIGHTREDPIN, RIGHTGREENPIN)
+taillight.bothred()
+display = SevenSegDisplay()
+
+lightstatus = False
 
 #loop and filter by event code and print the mapped label
 for event in gamepad.read_loop():
@@ -52,76 +69,102 @@ for event in gamepad.read_loop():
     if event.type == ecodes.EV_KEY:
         if event.value == 1:
             if event.code == aBtn:
-                print("A")
+                display.show(1, "A")
             elif event.code == bBtn:
-                print("B")
+                display.show(1, "B")
             elif event.code == sBtn:
-                print("Start")
+                display.show(1, "Start")
             elif event.code == lBtn:
-                print("Left Thumb")
+                display.show(1, "Horn")
+                horn.run('1')
+                time.sleep(0.5)
+                horn.run('0')
             elif event.code == rBtn:
-                print("Right Thumb")
+                if lightstatus:
+                    display.show(1, "Lite off")
+                    headlight.off()
+                    lightstatus = False
+                else:
+                    display.show(1, "Lite on")
+                    headlight.on()
+                    lightstatus = True
             elif event.code == trBtn:
-                print("Right back")
+                display.show(1, "Tail cls")
                 robotarm.tailclose()
             elif event.code == tlBtn:
-                print("Left back")
+                display.show(1, "Tail opn")
                 robotarm.tailopen()
             elif event.code == xBtn:
-                print("X")
+                display.show(1, "X")
             elif event.code == yBtn:
-                print("Y")
+                display.show(1, "Y")
     elif event.type == ecodes.EV_ABS:
         rawvalue = event.value    
         if event.code == updown:
             if event.value == -1:
+                display.show(1, "Arm up")
                 robotarm.up()
             elif event.value == 1:
+                display.show(1, "Arm down")
                 robotarm.down()
             else:
                 robotarm.stop()
         elif event.code == leftright:
             if event.value == -1:
+                display.show(1, "Claw opn")
                 robotarm.open()
             if event.value == 1:
+                display.show(1, "Claw cls")
                 robotarm.close()
         elif event.code == leftlr:
             if (rawvalue > 122 and rawvalue < 132):
                 motor.setMotorModel(0,0,0,0)
-                print("Turn completed")
+                display.show(1, "Stop")
             else:
                 speed = int(float(rawvalue - 127) / 127 * 3000)
-                print("Left right speed is" + str(speed))
+                if speed < 0:
+                    display.show(1, "Left trn")
+                else:
+                    display.show(1, "Rite trn")
                 motor.setMotorModel(speed, speed, -speed, -speed)
         elif event.code == leftud:
-            print("Stopping")
             if (rawvalue > 122 and rawvalue < 132):
+                display.show(1, "Stop")
                 motor.setMotorModel(0,0,0,0)
             else:
                 speed = int(float(rawvalue - 127) / 127 * 3000)
-                print("forward backward speed is" + str(speed))
+                if speed < 0:
+                    display.show(1, "Forward")
+                else:
+                    display.show(1, "Backward")
                 motor.setMotorModel(-speed, -speed, -speed, -speed)
         elif event.code == rightud:
             if rawvalue < 50:
+                display.show(1, "Arm fwd")
                 robotarm.front()
             elif rawvalue > 200:
+                display.show(1, "Arm back")
                 robotarm.back()
             else:
                 robotarm.stop()
         elif event.code == rightlr:
             if rawvalue < 50:
+                display.show(1, "Arm left")
                 robotarm.left()
             elif rawvalue > 200:
+                display.show(1, "Arm rite")
                 robotarm.right()
             else:
                 robotarm.stop()
         elif event.code == gas:
             if rawvalue > 100:
+                display.show(1, "Tail up")
                 robotarm.tailup()
             else:
                 robotarm.stop()
         elif event.code == brake:
             if rawvalue > 100:
+                display.show(1, "Tail dwn")
                 robotarm.taildown()
             else:
                 robotarm.stop()
