@@ -1,5 +1,4 @@
 import sys,os
-from Carbon.Aliases import false
 sys.path.append(os.path.join(sys.path[0],'Server'))
 from evdev import InputDevice, categorize, ecodes
 from Motor import *
@@ -14,6 +13,14 @@ from gpiozero import LED
 from TailLight import TailLight
 from SevenSegDisplay import SevenSegDisplay
 
+# Digital pin values
+BUZZERPIN = 17 # Used by Buzzer.py code
+LED_PIN = 18  # Used by Led.py code
+HEADLIGHTPIN = 16
+RIGHTREDPIN = 20
+LEFTGREENPIN = 21
+RIGHTGREENPIN = 21
+LEFTREDPIN = 26
 
 #creates object 'gamepad' to store the data
 # The device may be different in different boards
@@ -62,6 +69,7 @@ taillight.bothred()
 display = SevenSegDisplay()
 
 lightstatus = False
+working = False
 
 #loop and filter by event code and print the mapped label
 for event in gamepad.read_loop():
@@ -102,12 +110,17 @@ for event in gamepad.read_loop():
         rawvalue = event.value    
         if event.code == updown:
             if event.value == -1:
-                display.show(1, "Arm up")
-                robotarm.up()
+                if not working:
+                    working = True
+                    display.show(1, "Arm up")
+                    robotarm.up()
             elif event.value == 1:
-                display.show(1, "Arm down")
-                robotarm.down()
+                if not working:
+                    working = True
+                    display.show(1, "Arm down")
+                    robotarm.down()
             else:
+                working = False
                 robotarm.stop()
         elif event.code == leftright:
             if event.value == -1:
@@ -120,51 +133,78 @@ for event in gamepad.read_loop():
             if (rawvalue > 122 and rawvalue < 132):
                 motor.setMotorModel(0,0,0,0)
                 display.show(1, "Stop")
+                taillight.bothred()
+                working = False
             else:
                 speed = int(float(rawvalue - 127) / 127 * 3000)
-                if speed < 0:
-                    display.show(1, "Left trn")
-                else:
-                    display.show(1, "Rite trn")
+                if not working:
+                    working = True
+                    if speed < 0:
+                        taillight.rightblink()
+                        display.show(1, "Left trn")
+                    else:
+                        taillight.leftblink()
+                        display.show(1, "Rite trn")
                 motor.setMotorModel(speed, speed, -speed, -speed)
         elif event.code == leftud:
             if (rawvalue > 122 and rawvalue < 132):
+                working = False
                 display.show(1, "Stop")
+                taillight.bothred()
                 motor.setMotorModel(0,0,0,0)
             else:
                 speed = int(float(rawvalue - 127) / 127 * 3000)
-                if speed < 0:
-                    display.show(1, "Forward")
-                else:
-                    display.show(1, "Backward")
+                if not working:
+                    working = True
+                    if speed < 0:
+                        display.show(1, "Forward")
+                    else:
+                        display.show(1, "Backward")
+                        taillight.flash()
                 motor.setMotorModel(-speed, -speed, -speed, -speed)
         elif event.code == rightud:
             if rawvalue < 50:
-                display.show(1, "Arm fwd")
-                robotarm.front()
+                if not working:
+                    working = True
+                    display.show(1, "Arm fwd")
+                    robotarm.front()
             elif rawvalue > 200:
-                display.show(1, "Arm back")
-                robotarm.back()
+                if not working:
+                    working = True
+                    display.show(1, "Arm back")
+                    robotarm.back()
             else:
+                working = False
                 robotarm.stop()
         elif event.code == rightlr:
             if rawvalue < 50:
-                display.show(1, "Arm left")
-                robotarm.left()
+                if not working:
+                    working = True
+                    display.show(1, "Arm left")
+                    robotarm.left()
             elif rawvalue > 200:
-                display.show(1, "Arm rite")
-                robotarm.right()
+                if not working:
+                    working = True
+                    display.show(1, "Arm rite")
+                    robotarm.right()
             else:
+                working = False
                 robotarm.stop()
         elif event.code == gas:
             if rawvalue > 100:
-                display.show(1, "Tail up")
-                robotarm.tailup()
+                if not working:
+                    working = True
+                    display.show(1, "Tail up")
+                    robotarm.tailup()
             else:
+                working = False
                 robotarm.stop()
         elif event.code == brake:
             if rawvalue > 100:
-                display.show(1, "Tail dwn")
-                robotarm.taildown()
+                if not working:
+                    working = True
+                    display.show(1, "Tail dwn")
+                    robotarm.taildown()
             else:
+                working = False
                 robotarm.stop()

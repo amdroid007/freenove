@@ -75,10 +75,10 @@ class Robotarm:
         self.start_servo_thread(CLAWSERVO, to, by * -1, delay)
         
     def tailopen(self, to=0, by=5, delay=0.05):
-        self.start_servo_thread(TAILCLAWSERVO, to, by, delay)        
+        self.start_servo_thread(TAILCLAWSERVO, to, -by, delay)        
     
     def tailclose(self, to=0, by=5, delay=0.05):
-        self.start_servo_thread(TAILCLAWSERVO, to, by * -1, delay)
+        self.start_servo_thread(TAILCLAWSERVO, to, by, delay)
         
     def stop(self):
         self.stop_servo_thread()
