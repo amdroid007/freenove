@@ -9,6 +9,12 @@ echo_pin = 22
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(trigger_pin,GPIO.OUT)
 GPIO.setup(echo_pin,GPIO.IN)
+
+LEFT_ANGLE = 120
+FWD_ANGLE = 70
+RIGHT_ANGLE = 20
+SPEED = 0.05
+
 class Ultrasonic:
     
     def __init__(self):
@@ -26,13 +32,17 @@ class Ultrasonic:
             count = count-1
     
     def look_left(self):
-        self.pwm_S.setServoPwm('0',120)
+        for a in range(FWD_ANGLE,LEFT_ANGLE,5):
+            self.pwm_S.setServoPwm('0',a)
+            time.sleep(SPEED)
 
     def look_right(self):
-        self.pwm_S.setServoPwm('0',20)
+        for a in range(FWD_ANGLE,RIGHT_ANGLE,-5):
+            self.pwm_S.setServoPwm('0',a)
+            time.sleep(SPEED)
     
     def look_forward(self):
-        self.pwm_S.setServoPwm('0',70)
+        self.pwm_S.setServoPwm('0',FWD_ANGLE)
                  
     def get_distance(self):
         distance_cm=[0,0,0,0,0]

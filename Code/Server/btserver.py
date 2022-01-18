@@ -1,4 +1,5 @@
 import sys,os
+from Carbon.Aliases import false
 sys.path.append(os.path.join(sys.path[0],'Server'))
 from evdev import InputDevice, categorize, ecodes
 from Motor import *
@@ -12,6 +13,7 @@ from ADC import *
 from gpiozero import LED
 from TailLight import TailLight
 from SevenSegDisplay import SevenSegDisplay
+from Automodes import *
 
 # Digital pin values
 BUZZERPIN = 17 # Used by Buzzer.py code
@@ -21,12 +23,6 @@ RIGHTREDPIN = 20
 LEFTGREENPIN = 21
 RIGHTGREENPIN = 21
 LEFTREDPIN = 26
-
-#creates object 'gamepad' to store the data
-# The device may be different in different boards
-# particularly if other input devices are connected
-
-gamepad = InputDevice('/dev/input/event6')
 
 #button code variables (change to suit your device)
 aBtn = 304
@@ -58,6 +54,73 @@ rightud = 5 # 1 up 127 mid 255 down
 brake = 10 # 255 max 0 min
 gas = 9 # 255 max 0 min
 
+lightstatus = False
+working = False
+automode = False
+
+
+def run_ultrasonic_thread():
+    automode = True
+    threading.Thread(target=self.run_ultrasonic).start()
+
+# Event types
+# 0 - d < x
+# 1 - d >= x
+# 2 - l > r   - for future enhancement not using in first try
+# 3 - l <= r  - ditto
+def run_ultrasonic(self):
+    ttable = [[1, 0], [2, 4], [3, 5], [1, 1], [0, 0], [0, 0]]
+    x = 40
+    ultra = Ultrasonic()
+    print "Auto drive Start!"
+    
+    cur_state = 0
+    
+    while automode:
+        if cur_state == 0:
+            display.show(1, "FORWARD")
+            motor.slowForward()
+            ultra.look_forward()
+        elif cur_state == 1:
+            display.show(1, "LOOKLEFT")
+            motor.stopMotor()
+            ultra.look_left()
+            time.sleep(0.2)
+        elif cur_state == 2:
+            display.show(1, "LOOKRITE")
+            motor.stopMotor()
+            ultra.look_right()
+            time.sleep(0.2)
+        elif cur_state == 3:
+            display.show(1, "GOBACK")
+            motor.backup()
+        elif cur_state == 4:
+            display.show(1, "TURNLEFT")
+            motor.turnLeft()
+            time.sleep(0.2)
+        elif cur_state == 5:
+            display.show(1, "TURNRITE")
+            motor.turnRight()
+            time.sleep(0.2)
+        else:
+            print "Wrong state?"
+            cur_state = 0
+
+        time.sleep(0.1)
+        d = ultra.get_distance()
+        e = 0 if d < x else 1
+        cur_state = ttable[cur_state][e]
+        
+    print "Auto drive End!"
+        
+        
+
+#creates object 'gamepad' to store the data
+# The device may be different in different boards
+# particularly if other input devices are connected
+
+gamepad = InputDevice('/dev/input/event6')
+
 # Get the motor object
 motor = Motor()
 servo = Servo()
@@ -68,19 +131,23 @@ taillight = TailLight(LEFTREDPIN, LEFTGREENPIN, RIGHTREDPIN, RIGHTGREENPIN)
 taillight.bothred()
 display = SevenSegDisplay()
 
-lightstatus = False
-working = False
-
 #loop and filter by event code and print the mapped label
 for event in gamepad.read_loop():
     # print(event)
     if event.type == ecodes.EV_KEY:
         if event.value == 1:
             if event.code == aBtn:
-                display.show(1, "A")
+                if automode:
+                    automode = false
+                else:
+                    display.show(1, "AUTOMODE")
+                    time.sleep(2)
+                    run_ultrasonic_thread()
             elif event.code == bBtn:
+                automode = False
                 display.show(1, "B")
             elif event.code == sBtn:
+                automode = False
                 display.show(1, "Start")
             elif event.code == lBtn:
                 display.show(1, "Horn")
@@ -103,8 +170,10 @@ for event in gamepad.read_loop():
                 display.show(1, "Tail opn")
                 robotarm.tailopen()
             elif event.code == xBtn:
+                automode = False
                 display.show(1, "X")
             elif event.code == yBtn:
+                automode = False
                 display.show(1, "Y")
     elif event.type == ecodes.EV_ABS:
         rawvalue = event.value    
