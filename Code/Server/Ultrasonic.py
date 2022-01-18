@@ -10,9 +10,9 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(trigger_pin,GPIO.OUT)
 GPIO.setup(echo_pin,GPIO.IN)
 
-LEFT_ANGLE = 120
-FWD_ANGLE = 70
-RIGHT_ANGLE = 20
+LEFT_ANGLE = 130
+FWD_ANGLE = 80
+RIGHT_ANGLE = 30
 SPEED = 0.05
 
 class Ultrasonic:

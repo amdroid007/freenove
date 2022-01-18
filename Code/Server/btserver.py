@@ -133,6 +133,8 @@ taillight = TailLight(LEFTREDPIN, LEFTGREENPIN, RIGHTREDPIN, RIGHTGREENPIN)
 taillight.bothred()
 display = SevenSegDisplay()
 
+display.show(1, "Wall-e Ready!")
+
 #loop and filter by event code and print the mapped label
 for event in gamepad.read_loop():
     # print(event)
