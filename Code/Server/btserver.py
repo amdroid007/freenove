@@ -115,14 +115,6 @@ def run_ultrasonic():
     display.show(1, "Auto end")
     print "Auto drive End!"
         
-        
-
-#creates object 'gamepad' to store the data
-# The device may be different in different boards
-# particularly if other input devices are connected
-
-gamepad = InputDevice('/dev/input/event6')
-
 # Get the motor object
 motor = Motor()
 servo = Servo()
@@ -132,6 +124,24 @@ headlight = LED(HEADLIGHTPIN)
 taillight = TailLight(LEFTREDPIN, LEFTGREENPIN, RIGHTREDPIN, RIGHTGREENPIN)
 taillight.bothred()
 display = SevenSegDisplay()
+
+        
+
+#creates object 'gamepad' to store the data
+# The device may be different in different boards
+# particularly if other input devices are connected
+
+btconnected = False
+
+while not btconnected:
+    try:
+        gamepad = InputDevice('/dev/input/event6')
+        btconnected = True
+    except:
+        display.show(1, "ERR-RTRY")
+        time.sleep(1)
+        display.clear()
+        time.sleep(0.5)
 
 display.show(1, "Wall-e Ready!")
 
