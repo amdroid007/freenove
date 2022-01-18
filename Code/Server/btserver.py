@@ -1,5 +1,4 @@
 import sys,os
-from Carbon.Aliases import false
 sys.path.append(os.path.join(sys.path[0],'Server'))
 from evdev import InputDevice, categorize, ecodes
 from Motor import *
@@ -7,13 +6,13 @@ from Robotarm import *
 import RPi.GPIO as GPIO
 from servo import Servo
 from Buzzer import Buzzer
+from Ultrasonic import *
 from threading import Thread
 from Thread import *
 from ADC import *
 from gpiozero import LED
 from TailLight import TailLight
 from SevenSegDisplay import SevenSegDisplay
-from Automodes import *
 
 # Digital pin values
 BUZZERPIN = 17 # Used by Buzzer.py code
@@ -57,20 +56,22 @@ gas = 9 # 255 max 0 min
 lightstatus = False
 working = False
 automode = False
-
+shutdown = False
 
 def run_ultrasonic_thread():
+    global automode
     automode = True
-    threading.Thread(target=self.run_ultrasonic).start()
+    threading.Thread(target=run_ultrasonic).start()
 
 # Event types
 # 0 - d < x
 # 1 - d >= x
 # 2 - l > r   - for future enhancement not using in first try
 # 3 - l <= r  - ditto
-def run_ultrasonic(self):
+def run_ultrasonic():
+    global automode, display, motor
     ttable = [[1, 0], [2, 4], [3, 5], [1, 1], [0, 0], [0, 0]]
-    x = 40
+    x = 25 
     ultra = Ultrasonic()
     print "Auto drive Start!"
     
@@ -79,29 +80,28 @@ def run_ultrasonic(self):
     while automode:
         if cur_state == 0:
             display.show(1, "FORWARD")
-            motor.slowForward()
+            motor.slowforward()
             ultra.look_forward()
         elif cur_state == 1:
             display.show(1, "LOOKLEFT")
             motor.stopMotor()
             ultra.look_left()
-            time.sleep(0.2)
         elif cur_state == 2:
             display.show(1, "LOOKRITE")
             motor.stopMotor()
             ultra.look_right()
-            time.sleep(0.2)
         elif cur_state == 3:
             display.show(1, "GOBACK")
             motor.backup()
+            time.sleep(0.5)
         elif cur_state == 4:
             display.show(1, "TURNLEFT")
             motor.turnLeft()
-            time.sleep(0.2)
+            time.sleep(0.1)
         elif cur_state == 5:
             display.show(1, "TURNRITE")
             motor.turnRight()
-            time.sleep(0.2)
+            time.sleep(0.1)
         else:
             print "Wrong state?"
             cur_state = 0
@@ -111,6 +111,8 @@ def run_ultrasonic(self):
         e = 0 if d < x else 1
         cur_state = ttable[cur_state][e]
         
+    motor.stopMotor()
+    display.show(1, "Auto end")
     print "Auto drive End!"
         
         
@@ -137,24 +139,35 @@ for event in gamepad.read_loop():
     if event.type == ecodes.EV_KEY:
         if event.value == 1:
             if event.code == aBtn:
+                shutdown = False
                 if automode:
-                    automode = false
+                    automode = False
                 else:
                     display.show(1, "AUTOMODE")
                     time.sleep(2)
                     run_ultrasonic_thread()
             elif event.code == bBtn:
+                shutdown = False
                 automode = False
                 display.show(1, "B")
             elif event.code == sBtn:
+                if shutdown:
+                    display.show(1, "Pwr off!")
+                    os.system("sudo poweroff")
+                else:
+                    shutdown = True
+                    display.show(1, "Trn off?")
                 automode = False
-                display.show(1, "Start")
             elif event.code == lBtn:
+                shutdown = False
+                automode = False
                 display.show(1, "Horn")
                 horn.run('1')
                 time.sleep(0.5)
                 horn.run('0')
             elif event.code == rBtn:
+                shutdown = False
+                automode = False
                 if lightstatus:
                     display.show(1, "Lite off")
                     headlight.off()
@@ -170,9 +183,11 @@ for event in gamepad.read_loop():
                 display.show(1, "Tail opn")
                 robotarm.tailopen()
             elif event.code == xBtn:
+                shutdown = False
                 automode = False
                 display.show(1, "X")
             elif event.code == yBtn:
+                shutdown = False
                 automode = False
                 display.show(1, "Y")
     elif event.type == ecodes.EV_ABS:
