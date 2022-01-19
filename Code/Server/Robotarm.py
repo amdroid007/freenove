@@ -99,10 +99,10 @@ class Robotarm:
 
     def stop_servo_thread(self):
         global threadcount
-        self.moving = False
         if self.servo_thread:
             stop_thread(self.servo_thread)
             self.servo_thread = None
+            self.moving = False
             threadcount = threadcount - 1
             print("Current threadcount: " + str(threadcount))
 
@@ -149,8 +149,7 @@ class Robotarm:
             time.sleep(delay)
             if curpos == minpos or curpos == maxpos:
                 break
-        self.servo_thread = None
-        self.moving = False
+        self.stop_servo_thread()
                 
         
 # Main program logic follows:
