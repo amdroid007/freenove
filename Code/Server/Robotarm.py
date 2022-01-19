@@ -36,6 +36,9 @@ currentangles = {TAILARMSERVO:DEFTAILARMPOS, TAILCLAWSERVO:DEFTAILCLAWPOS, TURNS
 minangles = {TAILARMSERVO:TAILARMMIN, TAILCLAWSERVO:TAILCLAWMIN, TURNSERVO:TURNMIN, ARMSERVO:ARMMIN, REACHSERVO:REACHMIN, CLAWSERVO:CLAWMIN}
 maxangles = {TAILARMSERVO:TAILARMMAX, TAILCLAWSERVO:TAILCLAWMAX, TURNSERVO:TURNMAX, ARMSERVO:ARMMAX, REACHSERVO:REACHMAX, CLAWSERVO:CLAWMAX}
 
+# Need to debug this thing
+threadcount = 0
+
 class Robotarm:
     def __init__(self, servo):
         self.servo = servo
@@ -84,18 +87,24 @@ class Robotarm:
         self.stop_servo_thread()
         
     def start_servo_thread(self, channel, to, inc, delay):
+        global threadcount
         if self.servo_thread or self.moving:
             self.stop_servo_thread()
             time.sleep(0.2) # Pause a bit if we were already running to let things sync?
         self.moving = True    
         self.servo_thread = Thread(target=self.run_servo_thread, args=(channel, to, inc, delay))
         self.servo_thread.start()   
+        threadcount = threadcount + 1
+        print("Current threadcount: " + str(threadcount))
 
     def stop_servo_thread(self):
+        global threadcount
         self.moving = False
         if self.servo_thread:
             stop_thread(self.servo_thread)
             self.servo_thread = None
+            threadcount = threadcount - 1
+            print("Current threadcount: " + str(threadcount))
 
     def go(self, turn=0, arm=0, reach=0, claw=0, tail=0, tailclaw=0):
         if turn > 0:
