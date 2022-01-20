@@ -100,7 +100,10 @@ class Robotarm:
     def stop_servo_thread(self):
         global threadcount
         if self.servo_thread:
-            stop_thread(self.servo_thread)
+	    try:
+                stop_thread(self.servo_thread)
+	    except:
+		print("Stop thread failed? resetting anyway")
             self.servo_thread = None
             self.moving = False
             threadcount = threadcount - 1
