@@ -151,6 +151,62 @@ class Robotarm:
                 break
         self.stop_servo_thread()
                 
+    def run_tests(self, num_tests=1000, stop_probability = 0.8):
+        """A test method to figure out what is happening
+        
+        System getting stuck after a number of operations - unfortunately
+        not quite predictably - so lets try to get some kind of test that
+        may be we can run without powering on the servos to see if I can
+        reproduce the issue. Likely too many threads, but thread counting
+        did not seem to help.
+        
+        There are 12 operations, and the stop. Technically we call stop only
+        for the hand ops - claw ops do not call stop.
+        
+        So maybe we randomly find an op to run, a time period (0-2 sec) to run
+        and then call stop (or not) randomly. 
+        """
+        curtest = 0
+        random.seed(1234) # lets use a fixed seed so we can repeat this
+        
+        while curtest < num_tests:
+            curtest = curtest + 1
+            op = randint(1,12) # decide which op to run
+            duration = random.random()*2 # Generate a float between 0 and 2
+            stop = random.random() # Generate another float - use to decide if stop is called
+
+            print("Test # " + str(curtest) + " Op: " + str(op) + "Duration: " + str(duration) + "Stop prob: " + str(stop))
+            
+            if op == 1:
+                self.up()
+            elif op == 2:
+                self.down()
+            elif op == 3:
+                self.left()
+            elif op == 4:
+                self.right()
+            elif op == 5:
+                self.front()
+            elif op == 6:
+                self.back()
+            elif op == 7:
+                self.open()
+            elif op == 8:
+                self.close()
+            elif op == 9:
+                self.tailup()
+            elif op == 10:
+                self.taildown()
+            elif op == 11:
+                self.tailopen()
+            else:
+                self.tailclose()
+            
+            time.sleep(duration)
+            
+            if (stop <= stop_probability):
+                self.stop()
+                
         
 # Main program logic follows:
 # For full robot this will open and close the claw 4 times
@@ -158,21 +214,8 @@ if __name__ == '__main__':
     servo = Servo()
     myarm=Robotarm(servo)
     
-    myarm.taildown(to=30)
-    time.sleep(2)
-    myarm.stop()
-    myarm.tailup(to=110)
-    time.sleep(2)
-    myarm.stop()
-    myarm.tailup(to=100)
-    time.sleep(2)
-    myarm.stop()
+    myarm.run_tests()
     
-    myarm.tailopen()
-    time.sleep(1)
-    myarm.tailclose()
-    time.sleep(1)
-    myarm.stop()
-    myarm.go(turn=70, arm=80, reach=60, claw=45, tail=100, tailclaw=30)
+   
     print("Done!")
     sys.exit(0)
