@@ -1,5 +1,6 @@
 import time
 import sys
+import random
 from threading import Thread
 from Thread import *
 from servo import Servo
@@ -37,15 +38,79 @@ minangles = {TAILARMSERVO:TAILARMMIN, TAILCLAWSERVO:TAILCLAWMIN, TURNSERVO:TURNM
 maxangles = {TAILARMSERVO:TAILARMMAX, TAILCLAWSERVO:TAILCLAWMAX, TURNSERVO:TURNMAX, ARMSERVO:ARMMAX, REACHSERVO:REACHMAX, CLAWSERVO:CLAWMAX}
 
 # Need to debug this thing
-threadcount = 0
+moving = False
+runchannel = ''
+rundest = -1
+runinc = -1
+rundelay = -1.0
+
+class Job(threading.Thread):
+
+    def __init__(self, servo):
+        # super(Job, self).__init__(*args, **kwargs)
+	threading.Thread.__init__(self)
+	self.servo = servo
+        self.__flag = threading.Event() # The flag used to pause the thread
+        self.__flag.set() # Set to True
+        self.__running = threading.Event() # Used to stop the thread identification
+        self.__running.set() # Set running to True
+
+    def run(self):
+        # Do I need this? 
+        global moving, runchannel, rundest, runinc, rundelay
+        while self.__running.isSet():
+            self.__flag.wait() # return immediately when it is True, block until the internal flag is True when it is False
+            print("In thread - moving is: " + str(moving))
+            if (moving):
+                curpos = currentangles.get(runchannel)
+                runinc = runinc * -1 if rundest > 0 and (rundest - curpos) * runinc < 0 else runinc
+                minpos = minangles.get(runchannel)
+                maxpos = maxangles.get(runchannel) 
+                if rundest > 0:
+                    rundest = rundest if rundest > minpos else minpos
+                    rundest = rundest if rundest < maxpos else maxpos
+                    minpos = rundest if runinc < 0 else minpos
+                    maxpos = rundest if runinc > 0 else maxpos
+        
+                print("Start point Channel:" + runchannel + ", curpos: " + str(curpos) + ", target:" + str(rundest) + ", min: " + str(minpos) + ", max: " + str(maxpos))
+            
+                while(moving and curpos >= minpos and curpos <= maxpos):
+        
+                    curpos = curpos + runinc
+                    curpos = curpos if curpos <= maxpos else maxpos
+                    curpos = curpos if curpos >= minpos else minpos
+                        
+                    print("Channel:" + runchannel + " curpos " + str(curpos)) 
+        
+                    self.servo.setServoPwm(runchannel, curpos)
+                    currentangles[runchannel] = curpos               
+                    time.sleep(rundelay)
+                    if curpos == minpos or curpos == maxpos:
+                        break
+                moving = False
+                self.pause()
+                
+
+    def pause(self):
+        self.__flag.clear() # Set to False to block the thread
+
+    def resume(self):
+        self.__flag.set() # Set to True, let the thread stop blocking
+
+    def stop(self):
+        self.__flag.set() # Resume the thread from the suspended state, if it is already suspended
+        self.__running.clear() # Set to False
 
 class Robotarm:
     def __init__(self, servo):
         self.servo = servo
+        self.runner = Job(self.servo)
+        self.runner.setDaemon(True)
+        self.runner.start()
+        self.runner.pause()
         for x in currentangles.keys():
             self.servo.setServoPwm(x, currentangles.get(x))
-        self.moving = False
-        self.servo_thread = None
+            pass
         
     def up(self, to=0, by=2, delay=0.05):
         self.start_servo_thread(ARMSERVO, to, by, delay)
@@ -87,73 +152,56 @@ class Robotarm:
         self.stop_servo_thread()
         
     def start_servo_thread(self, channel, to, inc, delay):
-        global threadcount
-        if self.servo_thread or self.moving:
-            self.stop_servo_thread()
+        # Do I need this? 
+        global moving, runchannel, rundest, runinc, rundelay
+        if moving:
+            moving = False
+            self.runner.pause()
             time.sleep(0.2) # Pause a bit if we were already running to let things sync?
-        self.moving = True    
-        self.servo_thread = Thread(target=self.run_servo_thread, args=(channel, to, inc, delay))
-        self.servo_thread.start()   
-        threadcount = threadcount + 1
-        print("Current threadcount: " + str(threadcount))
+
+        moving = True    
+        runchannel = channel
+        rundest = to
+        runinc = inc
+        rundelay = delay
+        self.runner.resume()
 
     def stop_servo_thread(self):
-        global threadcount
-        if self.servo_thread:
-	    try:
-                stop_thread(self.servo_thread)
-	    except:
-		print("Stop thread failed? resetting anyway")
-            self.servo_thread = None
-            self.moving = False
-            threadcount = threadcount - 1
-            print("Current threadcount: " + str(threadcount))
+	global moving
+        moving = False
+        self.runner.pause()
 
     def go(self, turn=0, arm=0, reach=0, claw=0, tail=0, tailclaw=0):
+        global moving
         if turn > 0:
-            self.moving = True
-            self.run_servo_thread(TURNSERVO, turn, 2, .05)
+            moving = True
+            self.start_servo_thread(TURNSERVO, turn, 2, .05)
         if arm > 0:
+            while moving:
+                time.pause(0.25)
             self.moving = True
-            self.run_servo_thread(ARMSERVO, arm, 2, .05)
+            self.start_servo_thread(ARMSERVO, arm, 2, .05)
         if reach > 0:
-            self.moving = True
-            self.run_servo_thread(REACHSERVO, reach, 2, .05)
+            while moving:
+                time.pause(0.25)
+            moving = True
+            self.start_servo_thread(REACHSERVO, reach, 2, .05)
         if claw > 0:
-            self.moving = True
-            self.run_servo_thread(CLAWSERVO, claw, 5, .05)
+            while moving:
+                time.pause(0.25)
+            moving = True
+            self.start_servo_thread(CLAWSERVO, claw, 5, .05)
         if tail > 0:
-            self.moving = True
-            self.run_servo_thread(TAILARMSERVO, tail, 2, .05)
+            while moving:
+                time.pause(0.25)
+            moving = True
+            self.start_servo_thread(TAILARMSERVO, tail, 2, .05)
         if tailclaw > 0:
-            self.moving = True
-            self.run_servo_thread(TAILCLAWSERVO, tailclaw, 5, .05)
-        
-    def run_servo_thread(self, channel, to, inc, delay):
-        curpos = currentangles.get(channel)
-        inc = inc * -1 if to > 0 and (to - curpos) * inc < 0 else inc
-        minpos = minangles.get(channel)
-        maxpos = maxangles.get(channel) 
-        if to > 0:
-            to = to if to > minpos else minpos
-            to = to if to < maxpos else maxpos
-            minpos = to if inc < 0 else minpos
-            maxpos = to if inc > 0 else maxpos
-            
-        while(self.moving and curpos >= minpos and curpos <= maxpos):
-
-            curpos = curpos + inc
-            curpos = curpos if curpos <= maxpos else maxpos
-            curpos = curpos if curpos >= minpos else minpos
-            print("Channel:" + channel + " curpos " + str(curpos)) 
-                
-            self.servo.setServoPwm(channel, curpos)
-            currentangles[channel] = curpos               
-            time.sleep(delay)
-            if curpos == minpos or curpos == maxpos:
-                break
-        self.stop_servo_thread()
-                
+            while moving:
+                time.pause(0.25)
+            moving = True
+            self.start_servo_thread(TAILCLAWSERVO, tailclaw, 5, .05)
+                        
     def run_tests(self, num_tests=1000, stop_probability = 0.8):
         """A test method to figure out what is happening
         
@@ -170,15 +218,15 @@ class Robotarm:
         and then call stop (or not) randomly. 
         """
         curtest = 0
-        random.seed(1234) # lets use a fixed seed so we can repeat this
+        random.seed(1111) # lets use a fixed seed so we can repeat this
         
         while curtest < num_tests:
             curtest = curtest + 1
-            op = randint(1,12) # decide which op to run
-            duration = random.random()*2 # Generate a float between 0 and 2
+            op = random.randint(1,12) # decide which op to run
+            duration = 0.25 + random.random()*1.75 # Generate a float between 0 and 2
             stop = random.random() # Generate another float - use to decide if stop is called
 
-            print("Test # " + str(curtest) + " Op: " + str(op) + "Duration: " + str(duration) + "Stop prob: " + str(stop))
+            print("*** Test # " + str(curtest) + ": Op: " + str(op) + ", Duration: " + str(duration) + ", Stop prob: " + str(stop))
             
             if op == 1:
                 self.up()
