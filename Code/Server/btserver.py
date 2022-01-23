@@ -3,6 +3,7 @@ sys.path.append(os.path.join(sys.path[0], 'Server'))
 from evdev import InputDevice, categorize, ecodes
 import RPi.GPIO as GPIO
 from gpiozero import LED
+from rpi_ws281x import *
 from Motor import *
 from Robotarm import *
 from servo import Servo
@@ -94,7 +95,7 @@ def run_ultrasonic(tabletype=0):
     ttable1 = [[[6,0],[6,0]], [[3,4],[3,4]], [[3,5],[3,5]], [[6,6],[6,6]], [[6,0],[6,0]], [[6,0],[6,0]], [[1,1],[2,2]]]
     
     # Third transition table - uses the previous flip (branch)
-    ttable2 = [[[6,0],[6,0]], [[2,4],[3,4]], [[3,5],[1,5]], [[6,6],[6,6]], [[6,6],[6,6]], [[6,6],[6,6]], [[1,1],[2,2]]]
+    ttable2 = [[[6,0],[6,0]], [[2,4],[3,4]], [[3,5],[1,5]], [[6,6],[6,6]], [[6,0],[6,6]], [[6,0],[6,0]], [[1,1],[2,2]]]
 
     x = 25 
     ultra = Ultrasonic()
@@ -148,13 +149,15 @@ def run_ultrasonic(tabletype=0):
         d = ultra.get_distance()
         e = 0 if d < x else 1
         f = 1 if flip_state else 0
-        
+        oldstate = cur_state
+ 
         if tabletype == 0:
-            cur_state = ttable[cur_state][e][f]
+            cur_state = ttable[cur_state][f][e]
         elif tabletype == 1:
-            cur_state = ttable1[cur_state][e][f]
+            cur_state = ttable1[cur_state][f][e]
         else:
-            cur_state = ttable2[cur_state][e][f]
+            cur_state = ttable2[cur_state][f][e]
+        print("Transition from " + str(oldstate) + " on e: " + str(e) + ",f:" + str(f) + " to " + str(cur_state))
     
     ultra.look_forward()
     headlight.off()
@@ -168,8 +171,9 @@ def run_dance_thread():
     threading.Thread(target=run_dance).start()    
 
 def dancemove(*args):
+    global automode
     for move in args:
-        if not self.automode:
+        if not automode:
             break
         if move == DLEFT:
             motor.turnLeft()
@@ -192,37 +196,38 @@ def dancemove(*args):
             time.sleep(DSPEED)
             motor.stopMotor()
         elif move == DTOOT:
-            self.buzzer.run('1')
+            horn.run('1')
             time.sleep(DSPEED / 2)
-            self.buzzer.run('0')
+            horn.run('0')
             time.sleep(DSPEED / 2)
         elif move == DARMUP:
-            self.myservo.setServoPwm(ARM, (ARMSTART + ARMEND) * 2 / 3)
+            robotarm.tailup()
             time.sleep(DSPEED)
         elif move == DARMDOWN:
-            self.myservo.setServoPwm(ARM, (ARMSTART + ARMEND) * 1 / 3)
+            robotarm.taildown()
             time.sleep(DSPEED)
         elif move == DCLAP:
-            self.myservo.setServoPwm(HAND, HANDEND)
+            robotarm.tailclose()
             time.sleep(DSPEED)
-            self.myservo.setServoPwm(HAND, HANDSTART)
+            robotarm.tailopen()
             time.sleep(DSPEED)
         else:
             print "Invalid dance move?"
         
 def run_dance():
+    global automode
     motor.setMotorModel(0, 0, 0, 0)
     # start light show
     mode = str(random.randint(1, 4))
     ledthread = Thread(target=led.ledMode, args=(mode,))
     ledthread.start()
-    while self.automode:
-        self.dancemove(DLEFT, DBACK, DFORWARD, DBACK, DARMDOWN, DARMUP, DCLAP, DSPIN, DTOOT, DTOOT,
+    while automode:
+        dancemove(DLEFT, DBACK, DFORWARD, DBACK, DARMDOWN, DARMUP, DCLAP, DSPIN, DTOOT, DTOOT,
                        DRIGHT, DBACK, DFORWARD, DBACK, DARMDOWN, DARMUP, DCLAP, DSPIN, DTOOT, DTOOT)
     # self.dancemove(DARMUP, DARMDOWN, DCLAP)
     # stop light show when done
     stop_thread(ledthread)
-    self.led.colorWipe(self.led, Color(0, 0, 0), 10)
+    led.colorWipe(led, Color(0, 0, 0), 10)
     display.show(1, "DNCE END")
     print "Dance moves finished"
 

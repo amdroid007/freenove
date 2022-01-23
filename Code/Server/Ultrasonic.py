@@ -31,12 +31,12 @@ class Ultrasonic:
         while GPIO.input(echo_pin) != value and count>0:
             count = count-1
     
-    def look_left(self):
+    def look_right(self):
         for a in range(FWD_ANGLE,LEFT_ANGLE,5):
             self.pwm_S.setServoPwm('0',a)
             time.sleep(SPEED)
 
-    def look_right(self):
+    def look_left(self):
         for a in range(FWD_ANGLE,RIGHT_ANGLE,-5):
             self.pwm_S.setServoPwm('0',a)
             time.sleep(SPEED)
