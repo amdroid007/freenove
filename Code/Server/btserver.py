@@ -162,69 +162,69 @@ def run_ultrasonic(tabletype=0):
     display.show(1, "Auto end")
     print "Auto drive End!"
 
-    def run_dance_thread():
-        global automode
-        automode = True
-        threading.Thread(target=run_dance).start()    
+def run_dance_thread():
+    global automode
+    automode = True
+    threading.Thread(target=run_dance).start()    
 
-    def dancemove(*args):
-        for move in args:
-            if not self.automode:
-                break
-            if move == DLEFT:
-                motor.turnLeft()
-                time.sleep(DSPEED)
-                motor.stopMotor()
-            elif move == DRIGHT:
-                motor.turnRight()
-                time.sleep(DSPEED)
-                motor.stopMotor()
-            elif move == DSPIN:
-                motor.spin()
-                time.sleep(DSPEED * 2)
-                motor.stopMotor()
-            elif move == DFORWARD:
-                motor.slowforward()
-                time.sleep(DSPEED)
-                motor.stopMotor()
-            elif move == DBACK:
-                motor.slowBackup()
-                time.sleep(DSPEED)
-                motor.stopMotor()
-            elif move == DTOOT:
-                self.buzzer.run('1')
-                time.sleep(DSPEED / 2)
-                self.buzzer.run('0')
-                time.sleep(DSPEED / 2)
-            elif move == DARMUP:
-                self.myservo.setServoPwm(ARM, (ARMSTART + ARMEND) * 2 / 3)
-                time.sleep(DSPEED)
-            elif move == DARMDOWN:
-                self.myservo.setServoPwm(ARM, (ARMSTART + ARMEND) * 1 / 3)
-                time.sleep(DSPEED)
-            elif move == DCLAP:
-                self.myservo.setServoPwm(HAND, HANDEND)
-                time.sleep(DSPEED)
-                self.myservo.setServoPwm(HAND, HANDSTART)
-                time.sleep(DSPEED)
-            else:
-                print "Invalid dance move?"
-            
-    def run_dance():
-        motor.setMotorModel(0, 0, 0, 0)
-        # start light show
-        mode = str(random.randint(1, 4))
-        ledthread = Thread(target=led.ledMode, args=(mode,))
-        ledthread.start()
-        while self.automode:
-            self.dancemove(DLEFT, DBACK, DFORWARD, DBACK, DARMDOWN, DARMUP, DCLAP, DSPIN, DTOOT, DTOOT,
-                           DRIGHT, DBACK, DFORWARD, DBACK, DARMDOWN, DARMUP, DCLAP, DSPIN, DTOOT, DTOOT)
-        # self.dancemove(DARMUP, DARMDOWN, DCLAP)
-        # stop light show when done
-        stop_thread(ledthread)
-        self.led.colorWipe(self.led, Color(0, 0, 0), 10)
-        display.show(1, "DNCE END")
-        print "Dance moves finished"
+def dancemove(*args):
+    for move in args:
+        if not self.automode:
+            break
+        if move == DLEFT:
+            motor.turnLeft()
+            time.sleep(DSPEED)
+            motor.stopMotor()
+        elif move == DRIGHT:
+            motor.turnRight()
+            time.sleep(DSPEED)
+            motor.stopMotor()
+        elif move == DSPIN:
+            motor.spin()
+            time.sleep(DSPEED * 2)
+            motor.stopMotor()
+        elif move == DFORWARD:
+            motor.slowforward()
+            time.sleep(DSPEED)
+            motor.stopMotor()
+        elif move == DBACK:
+            motor.slowBackup()
+            time.sleep(DSPEED)
+            motor.stopMotor()
+        elif move == DTOOT:
+            self.buzzer.run('1')
+            time.sleep(DSPEED / 2)
+            self.buzzer.run('0')
+            time.sleep(DSPEED / 2)
+        elif move == DARMUP:
+            self.myservo.setServoPwm(ARM, (ARMSTART + ARMEND) * 2 / 3)
+            time.sleep(DSPEED)
+        elif move == DARMDOWN:
+            self.myservo.setServoPwm(ARM, (ARMSTART + ARMEND) * 1 / 3)
+            time.sleep(DSPEED)
+        elif move == DCLAP:
+            self.myservo.setServoPwm(HAND, HANDEND)
+            time.sleep(DSPEED)
+            self.myservo.setServoPwm(HAND, HANDSTART)
+            time.sleep(DSPEED)
+        else:
+            print "Invalid dance move?"
+        
+def run_dance():
+    motor.setMotorModel(0, 0, 0, 0)
+    # start light show
+    mode = str(random.randint(1, 4))
+    ledthread = Thread(target=led.ledMode, args=(mode,))
+    ledthread.start()
+    while self.automode:
+        self.dancemove(DLEFT, DBACK, DFORWARD, DBACK, DARMDOWN, DARMUP, DCLAP, DSPIN, DTOOT, DTOOT,
+                       DRIGHT, DBACK, DFORWARD, DBACK, DARMDOWN, DARMUP, DCLAP, DSPIN, DTOOT, DTOOT)
+    # self.dancemove(DARMUP, DARMDOWN, DCLAP)
+    # stop light show when done
+    stop_thread(ledthread)
+    self.led.colorWipe(self.led, Color(0, 0, 0), 10)
+    display.show(1, "DNCE END")
+    print "Dance moves finished"
 
         
 # Get the motor object
