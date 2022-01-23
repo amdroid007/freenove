@@ -34,23 +34,23 @@ ESCAPE = 1
 OK = 28
 
 # movement and function keys
-THROW = 20   # T
+THROW = 20  # T
 STARTAUTO = 22  # U
 STARTLINE = 23  # I
-STARTLANE = 30 # A
-SHAKE = 16   # Q = shaq?
+STARTLANE = 30  # A
+SHAKE = 16  # Q = shaq?
 DANCE = 32  # D
 HIFIVE = 35  # H
 STARTLIGHT = 24  # O = optical
 
-ARMUP = 31      # S = 31
-ARMDOWN = 45    # X = 45
+ARMUP = 31  # S = 31
+ARMDOWN = 45  # X = 45
 REACHFORWARD = 38  # L = 38
 REACHBACK = 52  # . = 52
-CLAWOPEN = 44   # Z = 44
+CLAWOPEN = 44  # Z = 44
 CLAWCLOSE = 46  # C = 46
-ARMLEFT = 51    # , = 51
-ARMRIGHT = 39   # ; = 39?
+ARMLEFT = 51  # , = 51
+ARMRIGHT = 39  # ; = 39?
 
 # Additional special keys
 SPACE = 57
@@ -77,7 +77,7 @@ HANDSTART = 25
 HANDEND = 120
 
 # Digital pin values
-BUZZERPIN = 17 # Used by Buzzer.py code
+BUZZERPIN = 17  # Used by Buzzer.py code
 LED_PIN = 18  # Used by Led.py code
 HEADLIGHTPIN = 16
 RIGHTREDPIN = 20
@@ -193,13 +193,14 @@ class myapp():
         GPIO.setup(IR01, GPIO.IN)
         GPIO.setup(IR02, GPIO.IN)
         GPIO.setup(IR03, GPIO.IN)
-        self.LMR0= 0x00
+        self.LMR0 = 0x00
         if GPIO.input(IR01) == False:
             self.LMR0 = (self.LMR0 | 4)
         if GPIO.input(IR02) == False:
             self.LMR0 = (self.LMR0 | 2)
         if GPIO.input(IR03) == False:
             self.LMR0 = (self.LMR0 | 1)
+
 	if self.LMR0 > 0:
 	    self.LMR0 = 7
         ttable = [[1, 0], [2, 4], [3, 5], [1, 1], [0, 0], [0, 0]]
@@ -273,7 +274,7 @@ class myapp():
         x = 10
         ultra = Ultrasonic()
 
-        ttable = [[0,3,1,2,1], [0,3,1,2,2], [0,3,1,2,1], [0,0,0,0,0]]
+        ttable = [[0, 3, 1, 2, 1], [0, 3, 1, 2, 2], [0, 3, 1, 2, 1], [0, 0, 0, 0, 0]]
         
         print "Lane keep start!"
         
@@ -319,7 +320,6 @@ class myapp():
             cur_state = ttable[cur_state][e]
             print("LMR: " + str(self.LMR) + " Cur state: " + str(cur_state))
             
-            
         print "Lane keep End!"
             
     def run_line(self):
@@ -364,7 +364,7 @@ class myapp():
         while self.automode:
             L = self.adc.recvADC(0)
             R = self.adc.recvADC(1)
-            if L < 2.99 and R < 2.99 :
+            if L < 2.99 and R < 2.99:
                 self.display.show(1, "FORWARD")
                 self.PWM.setMotorModel(1000, 1000, 1000, 1000)
                 
@@ -373,19 +373,19 @@ class myapp():
                 self.PWM.setMotorModel(0, 0, 0, 0)
                 
             elif L > 3 or R > 3:
-                if L > R :
+                if L > R:
                     self.display.show(1, "TURNLEFT")
                     self.PWM.setMotorModel(-1500, -1500, 2000, 2000)
                     
-                elif R > L :
+                elif R > L:
                     self.display.show(1, "TURNRITE")
                     self.PWM.setMotorModel(2000, 2000, -1500, -1500)
         print "Light follow finished!"
     
     def dancemove(self, *args):
         for move in args:
-	    if not self.automode:
-		break
+    	    if not self.automode:
+                break
             if move == DLEFT:
                 self.PWM.turnLeft()
                 time.sleep(DSPEED)
@@ -408,9 +408,9 @@ class myapp():
                 self.PWM.stopMotor()
             elif move == DTOOT:
                 self.buzzer.run('1')
-                time.sleep(DSPEED/2)
+                time.sleep(DSPEED / 2)
                 self.buzzer.run('0')
-                time.sleep(DSPEED/2)
+                time.sleep(DSPEED / 2)
             elif move == DARMUP:
                 self.myservo.setServoPwm(ARM, (ARMSTART + ARMEND) * 2 / 3)
                 time.sleep(DSPEED)
@@ -433,12 +433,13 @@ class myapp():
         ledthread = Thread(target=self.led.ledMode, args=(mode,))
         ledthread.start()
         while self.automode:
-            self.dancemove(DLEFT, DBACK, DFORWARD, DBACK, DARMDOWN, DARMUP, DCLAP, DSPIN, DTOOT, DTOOT, 
+            self.dancemove(DLEFT, DBACK, DFORWARD, DBACK, DARMDOWN, DARMUP, DCLAP, DSPIN, DTOOT, DTOOT,
                            DRIGHT, DBACK, DFORWARD, DBACK, DARMDOWN, DARMUP, DCLAP, DSPIN, DTOOT, DTOOT)
-	    #self.dancemove(DARMUP, DARMDOWN, DCLAP)
+	    # self.dancemove(DARMUP, DARMDOWN, DCLAP)
         # stop light show when done
         stop_thread(ledthread)
-	self.led.colorWipe(self.led, Color(0,0,0),10)
+
+	self.led.colorWipe(self.led, Color(0, 0, 0), 10)
         print "Dance moves finished"
 
 
@@ -540,7 +541,7 @@ if __name__ == '__main__':
                             myshow.myservo.setServoPwm(HAND, HANDSTART)
                             myshow.myservo.setServoPwm(ARM, ARMSTART)
                             time.sleep(2)
-                            myshow.myservo.setServoPwm(ARM,HIFIVEEND)
+                            myshow.myservo.setServoPwm(ARM, HIFIVEEND)
                         elif event.code == SHAKE:
                             display.show(1, "Shake")
                             curangle = SHAKESTART
