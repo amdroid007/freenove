@@ -264,6 +264,7 @@ while not btconnected:
 display.show(1, "Wall-e Ready!")
 
 # loop and filter by event code and print the mapped label
+speed = 0
 for event in gamepad.read_loop():
     # print(event)
     if event.type == ecodes.EV_KEY:
@@ -357,7 +358,8 @@ for event in gamepad.read_loop():
                 robotarm.close()
         elif event.code == leftlr:
             if (rawvalue > 122 and rawvalue < 132):
-                motor.brake(speed, -speed)
+                motor.stopMotor()
+		speed = 0
                 display.show(1, "Stop")
                 taillight.bothred()
                 working = False
@@ -378,6 +380,7 @@ for event in gamepad.read_loop():
                 display.show(1, "Stop")
                 taillight.bothred()
                 motor.brake(-speed, -speed)
+		speed = 0
             else:
                 speed = int(float(rawvalue - 127) / 127 * 3000)
                 if not working:
