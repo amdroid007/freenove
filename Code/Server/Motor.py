@@ -1,7 +1,7 @@
 import time
 from PCA9685 import PCA9685
 from pymaybe import maybe
-
+import random
 
 class Motor:
 
@@ -76,6 +76,41 @@ class Motor:
         else:
             self.pwm.setMotorPwm(4, 4095)
             self.pwm.setMotorPwm(5, 4095)
+            
+    def brake(self, leftspeed=0, rightspeed = 0):
+        if leftspeed == 0 or rightspeed == 0:
+            self.stopMotor()
+        else:
+            # bring down speed by 200 every 0.05 sec
+            # From full speed, it will take 1 sec to stop which is acceptable
+            # Maybe calculate # of reductions off the higher speed 
+            # and scale the reductions to the lower speed accordingly?
+            leftreduction = 200 * (leftspeed / abs(leftspeed))
+            rightreduction = 200 * (rightspeed / abs(rightspeed))
+            numsteps = leftspeed / leftreduction
+            if (abs(leftspeed) > abs(rightspeed)):
+                leftreduction = 200 * (leftspeed / abs(leftspeed))
+                rightreduction = 200 * abs(rightspeed)/abs(leftspeed) * (rightspeed / abs(rightspeed))
+                numsteps = leftspeed / leftreduction
+            elif (abs(leftspeed) < abs(rightspeed)):
+                rightreduction = 200 * (rightspeed / abs(rightspeed))
+                leftreduction = 200 * abs(leftspeed) / abs(rightspeed) * (leftspeed / abs(leftspeed))
+                numsteps = rightspeed / rightreduction
+            
+            # print("left: " + str(leftreduction) + ", right: " + str(rightreduction) + ",steps: " + str(numsteps))
+            
+            for s in range(0, numsteps):
+                leftspeed = leftspeed - (leftreduction)
+                if float(leftspeed) / float(leftreduction) < 0:
+                    break
+                rightspeed = rightspeed - (rightreduction)
+                if float(rightspeed) / float(rightreduction) < 0:
+                    break
+                # print("Left speed: " + str(leftspeed) + ", right speed: " + str(rightspeed))
+                self.setMotorModel(leftspeed, leftspeed, rightspeed, rightspeed)
+                time.sleep(0.05)
+            # print("Stopped!")
+            self.setMotorModel(0, 0, 0, 0)
             
     def stopMotor(self):
         self.setMotorModel(0, 0, 0, 0)
@@ -156,6 +191,14 @@ def destroy():
 
 if __name__ == '__main__':
     try:
-        loop()
+        while True:
+            random.seed()
+            # speed1 = random.randint(-4000, 4000)
+            # speed2 = random.randint(-4000, 4000)
+            speed1 = 3000
+            speed2 = -2500
+            print("Left speed: " + str(speed1) + ", right speed: " + str(speed2))
+            PWM.brake(speed1, speed2)
+            time.sleep(1)
     except KeyboardInterrupt:  # When 'Ctrl+C' is pressed, the child program destroy() will be  executed.
         destroy()
