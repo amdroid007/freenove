@@ -165,6 +165,7 @@ def run_ultrasonic(tabletype=0):
     motor.stopMotor()
     display.show(1, "Auto end")
     print "Auto drive End!"
+    check_battery()
 
 def run_dance_thread():
     global automode
@@ -215,6 +216,11 @@ def dancemove(*args):
         else:
             print "Invalid dance move?"
         
+def check_battery():
+    ADC_Power=adc.recvADC(2)*3
+    if ADC_Power < 6.8:
+        display.show(1,"batt low")
+    
 def run_dance():
     global automode
     motor.setMotorModel(0, 0, 0, 0)
@@ -231,7 +237,7 @@ def run_dance():
     led.colorWipe(led, Color(0, 0, 0), 10)
     display.show(1, "DNCE END")
     print "Dance moves finished"
-
+    check_battery()
         
 # Get the motor object
 motor = Motor()
@@ -243,6 +249,7 @@ taillight = TailLight(LEFTREDPIN, LEFTGREENPIN, RIGHTREDPIN, RIGHTGREENPIN)
 taillight.bothred()
 display = SevenSegDisplay()
 led = Led()
+adc = Adc()
 
 
 # creates object 'gamepad' to store the data
@@ -350,6 +357,7 @@ for event in gamepad.read_loop():
             else:
                 working = False
                 robotarm.stop()
+                check_battery()
         elif event.code == leftright:
             if event.value == -1:
                 display.show(1, "Claw opn")
@@ -364,6 +372,7 @@ for event in gamepad.read_loop():
                 display.show(1, "Stop")
                 taillight.bothred()
                 working = False
+                check_battery()
             elif rawvalue > 100 and rawvalue < 154:
                 pass
             else:
@@ -384,6 +393,7 @@ for event in gamepad.read_loop():
                 taillight.bothred()
                 motor.brake(-speed, -speed)
                 speed = 0
+                check_battery()
             elif rawvalue > 100 and rawvalue < 154:
                 pass
             else:
@@ -410,6 +420,7 @@ for event in gamepad.read_loop():
             else:
                 working = False
                 robotarm.stop()
+                check_battery()
         elif event.code == leftlr:
             if rawvalue < 50:
                 if not working:
@@ -424,6 +435,7 @@ for event in gamepad.read_loop():
             else:
                 working = False
                 robotarm.stop()
+                check_battery()
         elif event.code == gas:
             if rawvalue > 100:
                 if not working:
@@ -433,6 +445,7 @@ for event in gamepad.read_loop():
             else:
                 working = False
                 robotarm.stop()
+                check_battery()
         elif event.code == brake:
             if rawvalue > 100:
                 if not working:
@@ -442,3 +455,4 @@ for event in gamepad.read_loop():
             else:
                 working = False
                 robotarm.stop()
+                check_battery()
