@@ -77,7 +77,7 @@ class Motor:
             self.pwm.setMotorPwm(4, 4095)
             self.pwm.setMotorPwm(5, 4095)
             
-    def brake(self, leftspeed=0, rightspeed = 0):
+    def brake(self, leftspeed=0, rightspeed = 0, step=200, delay=0.02):
         if leftspeed == 0 or rightspeed == 0:
             self.stopMotor()
         else:
@@ -85,16 +85,16 @@ class Motor:
             # From full speed, it will take 1 sec to stop which is acceptable
             # Maybe calculate # of reductions off the higher speed 
             # and scale the reductions to the lower speed accordingly?
-            leftreduction = 200 * (leftspeed / abs(leftspeed))
-            rightreduction = 200 * (rightspeed / abs(rightspeed))
+            leftreduction = step * (leftspeed / abs(leftspeed))
+            rightreduction = step * (rightspeed / abs(rightspeed))
             numsteps = leftspeed / leftreduction
             if (abs(leftspeed) > abs(rightspeed)):
-                leftreduction = 200 * (leftspeed / abs(leftspeed))
-                rightreduction = 200 * abs(rightspeed)/abs(leftspeed) * (rightspeed / abs(rightspeed))
+                leftreduction = step * (leftspeed / abs(leftspeed))
+                rightreduction = step * abs(rightspeed)/abs(leftspeed) * (rightspeed / abs(rightspeed))
                 numsteps = leftspeed / leftreduction
             elif (abs(leftspeed) < abs(rightspeed)):
-                rightreduction = 200 * (rightspeed / abs(rightspeed))
-                leftreduction = 200 * abs(leftspeed) / abs(rightspeed) * (leftspeed / abs(leftspeed))
+                rightreduction = step * (rightspeed / abs(rightspeed))
+                leftreduction = step * abs(leftspeed) / abs(rightspeed) * (leftspeed / abs(leftspeed))
                 numsteps = rightspeed / rightreduction
             
             # print("left: " + str(leftreduction) + ", right: " + str(rightreduction) + ",steps: " + str(numsteps))
@@ -108,7 +108,7 @@ class Motor:
                     break
                 # print("Left speed: " + str(leftspeed) + ", right speed: " + str(rightspeed))
                 self.setMotorModel(leftspeed, leftspeed, rightspeed, rightspeed)
-                time.sleep(0.05)
+                time.sleep(delay)
             # print("Stopped!")
             self.setMotorModel(0, 0, 0, 0)
             

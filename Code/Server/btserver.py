@@ -358,11 +358,13 @@ for event in gamepad.read_loop():
                 robotarm.close()
         elif event.code == leftlr:
             if (rawvalue > 122 and rawvalue < 132):
-                motor.stopMotor()
-		speed = 0
+                motor.brake(speed, -speed)
+                speed = 0
                 display.show(1, "Stop")
                 taillight.bothred()
                 working = False
+            elif rawvalue > 100 and rawvalue < 154:
+                pass
             else:
                 speed = int(float(rawvalue - 127) / 127 * 3000)
                 if not working:
@@ -380,7 +382,9 @@ for event in gamepad.read_loop():
                 display.show(1, "Stop")
                 taillight.bothred()
                 motor.brake(-speed, -speed)
-		speed = 0
+                speed = 0
+            elif rawvalue > 100 and rawvalue < 154:
+                pass
             else:
                 speed = int(float(rawvalue - 127) / 127 * 3000)
                 if not working:
