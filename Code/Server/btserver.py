@@ -158,13 +158,13 @@ def run_ultrasonic(tabletype=0):
             cur_state = ttable1[cur_state][f][e]
         else:
             cur_state = ttable2[cur_state][f][e]
-        print("Transition from " + str(oldstate) + " on e: " + str(e) + ",f:" + str(f) + " to " + str(cur_state))
+        # print("Transition from " + str(oldstate) + " on e: " + str(e) + ",f:" + str(f) + " to " + str(cur_state))
     
     ultra.look_forward()
     headlight.off()
     motor.stopMotor()
     display.show(1, "Auto end")
-    print "Auto drive End!"
+    # print "Auto drive End!"
     check_battery()
 
 def run_dance_thread():
@@ -236,7 +236,7 @@ def run_dance():
     stop_thread(ledthread)
     led.colorWipe(led, Color(0, 0, 0), 10)
     display.show(1, "DNCE END")
-    print "Dance moves finished"
+    # print "Dance moves finished"
     check_battery()
         
 # Get the motor object
