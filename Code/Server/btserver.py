@@ -74,6 +74,7 @@ working = False  # Some movement is triggered already - we do not want to repeat
 automode = False  # Automode is initiated
 shutdown = False  # Shutdown has been requested
 
+MAXSPEED = 4000  # Max speed - may need to tone down
 
 def run_ultrasonic_thread(tabletype=0):
     global automode
@@ -356,7 +357,7 @@ for event in gamepad.read_loop():
             if event.value == 1:
                 display.show(1, "Claw cls")
                 robotarm.close()
-        elif event.code == leftlr:
+        elif event.code == rightlr:
             if (rawvalue > 122 and rawvalue < 132):
                 motor.brake(speed, -speed)
                 speed = 0
@@ -366,7 +367,7 @@ for event in gamepad.read_loop():
             elif rawvalue > 100 and rawvalue < 154:
                 pass
             else:
-                speed = int(float(rawvalue - 127) / 127 * 3000)
+                speed = int(float(rawvalue - 127) / 127 * MAXSPEED)
                 if not working:
                     working = True
                     if speed < 0:
@@ -376,7 +377,7 @@ for event in gamepad.read_loop():
                         taillight.leftblink()
                         display.show(1, "Rite trn")
                 motor.setMotorModel(speed, speed, -speed, -speed)
-        elif event.code == leftud:
+        elif event.code == rightud:
             if (rawvalue > 122 and rawvalue < 132):
                 working = False
                 display.show(1, "Stop")
@@ -386,7 +387,7 @@ for event in gamepad.read_loop():
             elif rawvalue > 100 and rawvalue < 154:
                 pass
             else:
-                speed = int(float(rawvalue - 127) / 127 * 3000)
+                speed = int(float(rawvalue - 127) / 127 * MAXSPEED)
                 if not working:
                     working = True
                     if speed < 0:
@@ -395,7 +396,7 @@ for event in gamepad.read_loop():
                         display.show(1, "Backward")
                         taillight.flash()
                 motor.setMotorModel(-speed, -speed, -speed, -speed)
-        elif event.code == rightud:
+        elif event.code == leftud:
             if rawvalue < 50:
                 if not working:
                     working = True
@@ -409,7 +410,7 @@ for event in gamepad.read_loop():
             else:
                 working = False
                 robotarm.stop()
-        elif event.code == rightlr:
+        elif event.code == leftlr:
             if rawvalue < 50:
                 if not working:
                     working = True
