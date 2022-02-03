@@ -98,6 +98,9 @@ def run_ultrasonic(tabletype=0):
     # Third transition table - uses the previous flip (branch)
     ttable2 = [[[6,0],[6,0]], [[2,4],[3,4]], [[3,5],[1,5]], [[6,6],[6,6]], [[6,0],[6,6]], [[6,0],[6,0]], [[1,1],[2,2]]]
 
+    # Third transition table - uses the previous flip (branch)
+    ttable3 = [[[6,0],[6,0]], [[2,4],[3,4]], [[3,5],[1,5]], [[6,6],[6,6]], [[6,0],[6,0]], [[6,0],[6,0]], [[4,4],[4,4]]]
+
     x = 25 
     ultra = Ultrasonic()
     # Change to a fixed number if needs to repeat
@@ -157,7 +160,7 @@ def run_ultrasonic(tabletype=0):
         elif tabletype == 1:
             cur_state = ttable1[cur_state][f][e]
         else:
-            cur_state = ttable2[cur_state][f][e]
+            cur_state = ttable3[cur_state][f][e]
         # print("Transition from " + str(oldstate) + " on e: " + str(e) + ",f:" + str(f) + " to " + str(cur_state))
     
     ultra.look_forward()
